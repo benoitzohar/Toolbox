@@ -54,146 +54,6 @@ if (!empty($_REQUEST['action'])) {
 	
 }
 
-
-$js_code = '
-
-	var row_limit = 7;
-	var xhr_fields = ["xhr_url"];
-	for(var i=0;i<=row_limit;i++) {xhr_fields.push("xhr_key"+i);xhr_fields.push("xhr_val"+i);}
-	
-	function getPostDataXHR() {
-		var d = {};
-		for(var i=0;i<=row_limit;i++) {			
-			var k = $("#xhr_key"+i).val();
-			var v = $("#xhr_val"+i).val();
-			if (k && v) d[k] = v;
-		}
-		return d;
-	}
-	
-	function getURLXHR(get) { 
-		var u = $("#xhr_url").val();
-		if (u.substr(0,4) != "http") u = "http://"+u;
-		if (get) {
-			if (u.substr(-1, 1) != "?") u += "?";
-			for(var i=0;i<=row_limit;i++) {			
-				var k = $("#xhr_key"+i).val();
-				var v = $("#xhr_val"+i).val();
-				if (k || v) {
-					if (i>0) u += "&";
-					u += k+"="+v;
-				}
-			}
-		}
-		return u;
-	}
-	
-	function doReqXHR() {
-		$("#loader").show();
-		$("#xhr_res").empty();
-		var t = $("input[name=\"method_inp\"]:checked").val();
-		try {
-			if (t == "GET") $.get(getURLXHR(true),fillResXHR);
-			else if (t == "POST") $.post(getURLXHR(),getPostDataXHR(),fillResXHR);
-		} catch(e) { fillResXHR(e);}
-	}
-	
-	function fillResXHR(d) {
-		$("#xhr_res").text(d);
-		
-		$("#loader").hide();	
-	}
-	function htmlize() {
-		$("#xhr_res").html($("#xhr_res").text().replace(/\n/gi,"<br />"));
-	}
-
-
-	function doReqRS(r) {		
-		$("#loader").show();
-		$("#rs_res").load("'.$_SERVER["SCRIPT_NAME"].'",{action:r});
-		var d = new Date();
-		var d_txt = d.getHours()+"h"+d.getMinutes()+"m "+d.getSeconds()+"s";
-		$("#"+r+" .last_done span").text(d_txt);
-		if (localStorage) localStorage[r] = d_txt;
-		$(".box").append("<div class=\"hider\"></div>");
-		setTimeout(function() {
-			$("#rs_res").empty();
-			$(".hider").remove();
-			$("#loader").hide();
-		},3000);
-	}
-
-
-// rot 13
-var rot13map;
-function rot13init(){
-  var map = new Array();var s = "abcdefghijklmnopqrstuvwxyz"; 
-  for(i=0; i<s.length; i++)map[s.charAt(i)]=s.charAt((i+13)%26);
-  for (i=0; i<s.length; i++)map[s.charAt(i).toUpperCase()]=s.charAt((i+13)%26).toUpperCase();
-  return map;
-}
-function rot13(a){
-  if (!rot13map)rot13map=rot13init();s = "";
-  for (i=0;i<a.length;i++){var b = a.charAt(i);s += (b>=\'A\' && b<=\'Z\' || b>=\'a\' && b<=\'z\' ? rot13map[b] : b);}
-  return s;
-}
-
-// md5
-function array(a){for(i=0;i<a;i++)this[i]=0;this.length=a}function integer(a){return a%(4294967295+1)}function shr(a,b){a=integer(a);b=integer(b);if(a-2147483648>=0){a=a%2147483648;a>>=b;a+=1073741824>>b-1}else a>>=b;return a}function shl1(a){a=a%2147483648;if(a&1073741824==1073741824){a-=1073741824;a*=2;a+=2147483648}else a*=2;return a}function shl(a,b){a=integer(a);b=integer(b);for(var c=0;c<b;c++)a=shl1(a);return a}function and(a,b){a=integer(a);b=integer(b);var c=a-2147483648;var d=b-2147483648;if(c>=0)if(d>=0)return(c&d)+2147483648;else return c&b;else if(d>=0)return a&d;else return a&b}function or(a,b){a=integer(a);b=integer(b);var c=a-2147483648;var d=b-2147483648;if(c>=0)if(d>=0)return(c|d)+2147483648;else return(c|b)+2147483648;else if(d>=0)return(a|d)+2147483648;else return a|b}function xor(a,b){a=integer(a);b=integer(b);var c=a-2147483648;var d=b-2147483648;if(c>=0)if(d>=0)return c^d;else return(c^b)+2147483648;else if(d>=0)return(a^d)+2147483648;else return a^b}function not(a){a=integer(a);return 4294967295-a}function F(a,b,c){return or(and(a,b),and(not(a),c))}function G(a,b,c){return or(and(a,c),and(b,not(c)))}function H(a,b,c){return xor(xor(a,b),c)}function I(a,b,c){return xor(b,or(a,not(c)))}function rotateLeft(a,b){return or(shl(a,b),shr(a,32-b))}function FF(a,b,c,d,e,f,g){a=a+F(b,c,d)+e+g;a=rotateLeft(a,f);a=a+b;return a}function GG(a,b,c,d,e,f,g){a=a+G(b,c,d)+e+g;a=rotateLeft(a,f);a=a+b;return a}function HH(a,b,c,d,e,f,g){a=a+H(b,c,d)+e+g;a=rotateLeft(a,f);a=a+b;return a}function II(a,b,c,d,e,f,g){a=a+I(b,c,d)+e+g;a=rotateLeft(a,f);a=a+b;return a}function transform(a,b){var c=0,d=0,e=0,f=0;var g=transformBuffer;c=state[0];d=state[1];e=state[2];f=state[3];for(i=0;i<16;i++){g[i]=and(a[i*4+b],255);for(j=1;j<4;j++){g[i]+=shl(and(a[i*4+j+b],255),j*8)}}c=FF(c,d,e,f,g[0],S11,3614090360);f=FF(f,c,d,e,g[1],S12,3905402710);e=FF(e,f,c,d,g[2],S13,606105819);d=FF(d,e,f,c,g[3],S14,3250441966);c=FF(c,d,e,f,g[4],S11,4118548399);f=FF(f,c,d,e,g[5],S12,1200080426);e=FF(e,f,c,d,g[6],S13,2821735955);d=FF(d,e,f,c,g[7],S14,4249261313);c=FF(c,d,e,f,g[8],S11,1770035416);f=FF(f,c,d,e,g[9],S12,2336552879);e=FF(e,f,c,d,g[10],S13,4294925233);d=FF(d,e,f,c,g[11],S14,2304563134);c=FF(c,d,e,f,g[12],S11,1804603682);f=FF(f,c,d,e,g[13],S12,4254626195);e=FF(e,f,c,d,g[14],S13,2792965006);d=FF(d,e,f,c,g[15],S14,1236535329);c=GG(c,d,e,f,g[1],S21,4129170786);f=GG(f,c,d,e,g[6],S22,3225465664);e=GG(e,f,c,d,g[11],S23,643717713);d=GG(d,e,f,c,g[0],S24,3921069994);c=GG(c,d,e,f,g[5],S21,3593408605);f=GG(f,c,d,e,g[10],S22,38016083);e=GG(e,f,c,d,g[15],S23,3634488961);d=GG(d,e,f,c,g[4],S24,3889429448);c=GG(c,d,e,f,g[9],S21,568446438);f=GG(f,c,d,e,g[14],S22,3275163606);e=GG(e,f,c,d,g[3],S23,4107603335);d=GG(d,e,f,c,g[8],S24,1163531501);c=GG(c,d,e,f,g[13],S21,2850285829);f=GG(f,c,d,e,g[2],S22,4243563512);e=GG(e,f,c,d,g[7],S23,1735328473);d=GG(d,e,f,c,g[12],S24,2368359562);c=HH(c,d,e,f,g[5],S31,4294588738);f=HH(f,c,d,e,g[8],S32,2272392833);e=HH(e,f,c,d,g[11],S33,1839030562);d=HH(d,e,f,c,g[14],S34,4259657740);c=HH(c,d,e,f,g[1],S31,2763975236);f=HH(f,c,d,e,g[4],S32,1272893353);e=HH(e,f,c,d,g[7],S33,4139469664);d=HH(d,e,f,c,g[10],S34,3200236656);c=HH(c,d,e,f,g[13],S31,681279174);f=HH(f,c,d,e,g[0],S32,3936430074);e=HH(e,f,c,d,g[3],S33,3572445317);d=HH(d,e,f,c,g[6],S34,76029189);c=HH(c,d,e,f,g[9],S31,3654602809);f=HH(f,c,d,e,g[12],S32,3873151461);e=HH(e,f,c,d,g[15],S33,530742520);d=HH(d,e,f,c,g[2],S34,3299628645);c=II(c,d,e,f,g[0],S41,4096336452);f=II(f,c,d,e,g[7],S42,1126891415);e=II(e,f,c,d,g[14],S43,2878612391);d=II(d,e,f,c,g[5],S44,4237533241);c=II(c,d,e,f,g[12],S41,1700485571);f=II(f,c,d,e,g[3],S42,2399980690);e=II(e,f,c,d,g[10],S43,4293915773);d=II(d,e,f,c,g[1],S44,2240044497);c=II(c,d,e,f,g[8],S41,1873313359);f=II(f,c,d,e,g[15],S42,4264355552);e=II(e,f,c,d,g[6],S43,2734768916);d=II(d,e,f,c,g[13],S44,1309151649);c=II(c,d,e,f,g[4],S41,4149444226);f=II(f,c,d,e,g[11],S42,3174756917);e=II(e,f,c,d,g[2],S43,718787259);d=II(d,e,f,c,g[9],S44,3951481745);state[0]+=c;state[1]+=d;state[2]+=e;state[3]+=f}function init(){count[0]=count[1]=0;state[0]=1732584193;state[1]=4023233417;state[2]=2562383102;state[3]=271733878;for(i=0;i<digestBits.length;i++)digestBits[i]=0}function update(a){var b,c;b=and(shr(count[0],3),63);if(count[0]<4294967295-7)count[0]+=8;else{count[1]++;count[0]-=4294967295+1;count[0]+=8}buffer[b]=and(a,255);if(b>=63){transform(buffer,0)}}function finish(){var a=new array(8);var b;var c=0,d=0,e=0;for(c=0;c<4;c++){a[c]=and(shr(count[0],c*8),255)}for(c=0;c<4;c++){a[c+4]=and(shr(count[1],c*8),255)}d=and(shr(count[0],3),63);e=d<56?56-d:120-d;b=new array(64);b[0]=128;for(c=0;c<e;c++)update(b[c]);for(c=0;c<8;c++)update(a[c]);for(c=0;c<4;c++){for(j=0;j<4;j++){digestBits[c*4+j]=and(shr(state[c],j*8),255)}}}function hexa(a){var b="0123456789abcdef";var c="";var d=a;for(hexa_i=0;hexa_i<8;hexa_i++){c=b.charAt(Math.abs(d)%16)+c;d=Math.floor(d/16)}return c}function MD5(a){var b,c,d,e,f,g,h;init();for(d=0;d<a.length;d++){b=a.charAt(d);update(ascii.lastIndexOf(b))}finish();e=f=g=h=0;for(i=0;i<4;i++)e+=shl(digestBits[15-i],i*8);for(i=4;i<8;i++)f+=shl(digestBits[15-i],(i-4)*8);for(i=8;i<12;i++)g+=shl(digestBits[15-i],(i-8)*8);for(i=12;i<16;i++)h+=shl(digestBits[15-i],(i-12)*8);c=hexa(h)+hexa(g)+hexa(f)+hexa(e);return c}var state=new array(4);var count=new array(2);count[0]=0;count[1]=0;var buffer=new array(64);var transformBuffer=new array(16);var digestBits=new array(16);var S11=7;var S12=12;var S13=17;var S14=22;var S21=5;var S22=9;var S23=14;var S24=20;var S31=4;var S32=11;var S33=16;var S34=23;var S41=6;var S42=10;var S43=15;var S44=21;var ascii="01234567890123456789012345678901"+" !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ"+"[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-
- 
- function onEncrypt() {
- 	var txta = $("#encrypt_txtarea");
- 	var initial_value = txta.val();
- 	var encrypt_method = $(".encrypt_method button.active").text();
- 	if (encrypt_method == "rot13") {
- 		txta.val(rot13(initial_value));
- 	} 
- 	else if (encrypt_method == "md5") {
- 		txta.val(MD5(initial_value));
- 	}
- 	txta.select();
- }	
- 
-	$(function() {
-	
-		// map href links
-		$.each($("div.navbar a"),function() {
-			if (/#/.test($(this).attr("href"))) {
-				$(this).click(function() {
-					setTimeout(function() {
-						$(".tabcont").addClass("hidden"); console.log(document.location.hash.replace("#",""));
-						$(document.location.hash).removeClass("hidden");
-						$("div.navbar li").removeClass("active");
-						$("div.navbar a[href=\""+document.location.hash+"\"]").parents("li").addClass("active");
-					},100);
-				});
-			}
-		});
-		
-		if (!document.location.hash) 	$("#XHR").removeClass("hidden");
-		else {
-			$(document.location.hash).removeClass("hidden");
-			$("div.navbar li").removeClass("active");
-			$("div.navbar a[href=\""+document.location.hash+"\"]").parents("li").addClass("active");
-		}
-			
-		if (localStorage) {
-			for(var k in xhr_fields){
-				if (localStorage[xhr_fields[k]]) $("#"+xhr_fields[k]).val(localStorage[xhr_fields[k]]);
-				$("#"+xhr_fields[k]).change(function(){
-					localStorage[$(this).attr("id")] = $(this).val();
-				});
-			}
-			if (localStorage["meth"]){ 	$("#"+localStorage["meth"]).attr("checked","checked"); 	}
-			
-			if (localStorage["restart_apache"]) $("#restart_apache .last_done span").text(localStorage["restart_apache"]);
-			if (localStorage["restart_socket"]) $("#restart_socket .last_done span").text(localStorage["restart_socket"]);
-		}
-	});
-
-';
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -252,7 +112,7 @@ function array(a){for(i=0;i<a;i++)this[i]=0;this.length=a}function integer(a){re
 <div class="container">
 
 	<div id="XHR" class="tabcont hidden">
-		<div id="xhr_header">
+		<div id="xhr_header" class="well" >
 			<div class="input-prepend"><span class="add-on">URL</span><input type="text" id="xhr_url" style="width:500px;" value=""/></div>
 			<div id="xhr_params_box">
 				<div class="input-prepend"><span class="add-on">Key</span><input type="text" id="xhr_key0" /><span class="add-on">Value</span><input type="text" id="xhr_val0" /></div>
@@ -290,17 +150,19 @@ function array(a){for(i=0;i<a;i++)this[i]=0;this.length=a}function integer(a){re
 
 	</div>
 	
-	<div id="Timestamp" class="tabcont hidden">
-	
-		<div class="input-prepend"><span class="add-on">Day</span><input type="text" class="span1" id="ts_day" /></div>
-		<div class="input-prepend"><span class="add-on">Month</span><input type="text" class="span1" id="ts_month" /></div>
-		<div class="input-prepend"><span class="add-on">Year</span><input type="text" class="span1" id="ts_year" /></div>
+	<div id="Timestamp" class="tabcont well hidden">
 		
-		<div class="input-prepend"><span class="add-on">Hour</span><input type="text" class="span1" id="ts_hour" /></div>
-		<div class="input-prepend"><span class="add-on">Minute</span><input type="text" class="span1" id="ts_minute" /></div>
-		<div class="input-prepend"><span class="add-on">Second</span><input type="text" class="span1" id="ts_second" /></div>
-		
-		<input type="text" id="ts_input" onkeydown="refreshTimestamp();"/>
+		<div class="form-inline">
+		<div class="input-prepend"><span class="add-on">Day</span><input type="text" class="span1" id="ts_day" onkeyup="refreshTimestamp('d');" /></div>
+		<div class="input-prepend"><span class="add-on">Month</span><input type="text" class="span1" id="ts_month" onkeyup="refreshTimestamp('d');" /></div>
+		<div class="input-prepend"><span class="add-on">Year</span><input type="text" class="span1" id="ts_year" onkeyup="refreshTimestamp('d');" /></div>
+		</div>
+		<div class="form-inline">
+		<div class="input-prepend"><span class="add-on">Hour</span><input type="text" class="span1" id="ts_hour" onkeyup="refreshTimestamp('d');" /></div>
+		<div class="input-prepend"><span class="add-on">Minute</span><input type="text" class="span1" id="ts_minute" onkeyup="refreshTimestamp('d');" /></div>
+		<div class="input-prepend"><span class="add-on">Second</span><input type="text" class="span1" id="ts_second" onkeyup="refreshTimestamp('d');" /></div>
+		</div>
+		<input type="text" id="ts_input" onkeyup="refreshTimestamp('input');" />
 		<button class="btn" onclick="resetTimestamp();">Now</button>
 		
 
@@ -351,7 +213,176 @@ function array(a){for(i=0;i<a;i++)this[i]=0;this.length=a}function integer(a){re
 <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-carousel.js"></script>
 <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-typeahead.js"></script>
 <script src="http://twitter.github.com/bootstrap/assets/js/application.js"></script>
-<script><?php echo $js_code; ?></script>
+<script>
+var row_limit = 7;
+	var xhr_fields = ["xhr_url"];
+	for(var i=0;i<=row_limit;i++) {xhr_fields.push("xhr_key"+i);xhr_fields.push("xhr_val"+i);}
+	
+	function getPostDataXHR() {
+		var d = {};
+		for(var i=0;i<=row_limit;i++) {			
+			var k = $("#xhr_key"+i).val();
+			var v = $("#xhr_val"+i).val();
+			if (k && v) d[k] = v;
+		}
+		return d;
+	}
+	
+	function getURLXHR(get) { 
+		var u = $("#xhr_url").val();
+		if (u.substr(0,4) != "http") u = "http://"+u;
+		if (get) {
+			if (u.substr(-1, 1) != "?") u += "?";
+			for(var i=0;i<=row_limit;i++) {			
+				var k = $("#xhr_key"+i).val();
+				var v = $("#xhr_val"+i).val();
+				if (k || v) {
+					if (i>0) u += "&";
+					u += k+"="+v;
+				}
+			}
+		}
+		return u;
+	}
+	
+	function doReqXHR() {
+		$("#loader").show();
+		$("#xhr_res").empty();
+		var t = $("input[name=\"method_inp\"]:checked").val();
+		try {
+			if (t == "GET") $.get(getURLXHR(true),fillResXHR);
+			else if (t == "POST") $.post(getURLXHR(),getPostDataXHR(),fillResXHR);
+		} catch(e) { fillResXHR(e);}
+	}
+	
+	function fillResXHR(d) {
+		$("#xhr_res").text(d);
+		
+		$("#loader").hide();	
+	}
+	function htmlize() {
+		$("#xhr_res").html($("#xhr_res").text().replace(/\n/gi,"<br />"));
+	}
+
+
+	function doReqRS(r) {		
+		$("#loader").show();
+		$("#rs_res").load("<?php echo $_SERVER["SCRIPT_NAME"]; ?>",{action:r});
+		var d = new Date();
+		var d_txt = d.getHours()+"h"+d.getMinutes()+"m "+d.getSeconds()+"s";
+		$("#"+r+" .last_done span").text(d_txt);
+		if (localStorage) localStorage[r] = d_txt;
+		$(".box").append('<div class="hider"></div>');
+		setTimeout(function() {
+			$("#rs_res").empty();
+			$(".hider").remove();
+			$("#loader").hide();
+		},3000);
+	}
+
+	
+	// rot 13
+	var rot13map;
+	function rot13init(){
+	  var map = new Array();var s = "abcdefghijklmnopqrstuvwxyz"; 
+	  for(i=0; i<s.length; i++)map[s.charAt(i)]=s.charAt((i+13)%26);
+	  for (i=0; i<s.length; i++)map[s.charAt(i).toUpperCase()]=s.charAt((i+13)%26).toUpperCase();
+	  return map;
+	}
+	function rot13(a){
+	  if (!rot13map)rot13map=rot13init();s = "";
+	  for (i=0;i<a.length;i++){var b = a.charAt(i);s += (b>='A' && b<='Z' || b>='a' && b<='z' ? rot13map[b] : b);}
+	  return s;
+	}
+	
+	// md5
+	function array(a){for(i=0;i<a;i++)this[i]=0;this.length=a}function integer(a){return a%(4294967295+1)}function shr(a,b){a=integer(a);b=integer(b);if(a-2147483648>=0){a=a%2147483648;a>>=b;a+=1073741824>>b-1}else a>>=b;return a}function shl1(a){a=a%2147483648;if(a&1073741824==1073741824){a-=1073741824;a*=2;a+=2147483648}else a*=2;return a}function shl(a,b){a=integer(a);b=integer(b);for(var c=0;c<b;c++)a=shl1(a);return a}function and(a,b){a=integer(a);b=integer(b);var c=a-2147483648;var d=b-2147483648;if(c>=0)if(d>=0)return(c&d)+2147483648;else return c&b;else if(d>=0)return a&d;else return a&b}function or(a,b){a=integer(a);b=integer(b);var c=a-2147483648;var d=b-2147483648;if(c>=0)if(d>=0)return(c|d)+2147483648;else return(c|b)+2147483648;else if(d>=0)return(a|d)+2147483648;else return a|b}function xor(a,b){a=integer(a);b=integer(b);var c=a-2147483648;var d=b-2147483648;if(c>=0)if(d>=0)return c^d;else return(c^b)+2147483648;else if(d>=0)return(a^d)+2147483648;else return a^b}function not(a){a=integer(a);return 4294967295-a}function F(a,b,c){return or(and(a,b),and(not(a),c))}function G(a,b,c){return or(and(a,c),and(b,not(c)))}function H(a,b,c){return xor(xor(a,b),c)}function I(a,b,c){return xor(b,or(a,not(c)))}function rotateLeft(a,b){return or(shl(a,b),shr(a,32-b))}function FF(a,b,c,d,e,f,g){a=a+F(b,c,d)+e+g;a=rotateLeft(a,f);a=a+b;return a}function GG(a,b,c,d,e,f,g){a=a+G(b,c,d)+e+g;a=rotateLeft(a,f);a=a+b;return a}function HH(a,b,c,d,e,f,g){a=a+H(b,c,d)+e+g;a=rotateLeft(a,f);a=a+b;return a}function II(a,b,c,d,e,f,g){a=a+I(b,c,d)+e+g;a=rotateLeft(a,f);a=a+b;return a}function transform(a,b){var c=0,d=0,e=0,f=0;var g=transformBuffer;c=state[0];d=state[1];e=state[2];f=state[3];for(i=0;i<16;i++){g[i]=and(a[i*4+b],255);for(j=1;j<4;j++){g[i]+=shl(and(a[i*4+j+b],255),j*8)}}c=FF(c,d,e,f,g[0],S11,3614090360);f=FF(f,c,d,e,g[1],S12,3905402710);e=FF(e,f,c,d,g[2],S13,606105819);d=FF(d,e,f,c,g[3],S14,3250441966);c=FF(c,d,e,f,g[4],S11,4118548399);f=FF(f,c,d,e,g[5],S12,1200080426);e=FF(e,f,c,d,g[6],S13,2821735955);d=FF(d,e,f,c,g[7],S14,4249261313);c=FF(c,d,e,f,g[8],S11,1770035416);f=FF(f,c,d,e,g[9],S12,2336552879);e=FF(e,f,c,d,g[10],S13,4294925233);d=FF(d,e,f,c,g[11],S14,2304563134);c=FF(c,d,e,f,g[12],S11,1804603682);f=FF(f,c,d,e,g[13],S12,4254626195);e=FF(e,f,c,d,g[14],S13,2792965006);d=FF(d,e,f,c,g[15],S14,1236535329);c=GG(c,d,e,f,g[1],S21,4129170786);f=GG(f,c,d,e,g[6],S22,3225465664);e=GG(e,f,c,d,g[11],S23,643717713);d=GG(d,e,f,c,g[0],S24,3921069994);c=GG(c,d,e,f,g[5],S21,3593408605);f=GG(f,c,d,e,g[10],S22,38016083);e=GG(e,f,c,d,g[15],S23,3634488961);d=GG(d,e,f,c,g[4],S24,3889429448);c=GG(c,d,e,f,g[9],S21,568446438);f=GG(f,c,d,e,g[14],S22,3275163606);e=GG(e,f,c,d,g[3],S23,4107603335);d=GG(d,e,f,c,g[8],S24,1163531501);c=GG(c,d,e,f,g[13],S21,2850285829);f=GG(f,c,d,e,g[2],S22,4243563512);e=GG(e,f,c,d,g[7],S23,1735328473);d=GG(d,e,f,c,g[12],S24,2368359562);c=HH(c,d,e,f,g[5],S31,4294588738);f=HH(f,c,d,e,g[8],S32,2272392833);e=HH(e,f,c,d,g[11],S33,1839030562);d=HH(d,e,f,c,g[14],S34,4259657740);c=HH(c,d,e,f,g[1],S31,2763975236);f=HH(f,c,d,e,g[4],S32,1272893353);e=HH(e,f,c,d,g[7],S33,4139469664);d=HH(d,e,f,c,g[10],S34,3200236656);c=HH(c,d,e,f,g[13],S31,681279174);f=HH(f,c,d,e,g[0],S32,3936430074);e=HH(e,f,c,d,g[3],S33,3572445317);d=HH(d,e,f,c,g[6],S34,76029189);c=HH(c,d,e,f,g[9],S31,3654602809);f=HH(f,c,d,e,g[12],S32,3873151461);e=HH(e,f,c,d,g[15],S33,530742520);d=HH(d,e,f,c,g[2],S34,3299628645);c=II(c,d,e,f,g[0],S41,4096336452);f=II(f,c,d,e,g[7],S42,1126891415);e=II(e,f,c,d,g[14],S43,2878612391);d=II(d,e,f,c,g[5],S44,4237533241);c=II(c,d,e,f,g[12],S41,1700485571);f=II(f,c,d,e,g[3],S42,2399980690);e=II(e,f,c,d,g[10],S43,4293915773);d=II(d,e,f,c,g[1],S44,2240044497);c=II(c,d,e,f,g[8],S41,1873313359);f=II(f,c,d,e,g[15],S42,4264355552);e=II(e,f,c,d,g[6],S43,2734768916);d=II(d,e,f,c,g[13],S44,1309151649);c=II(c,d,e,f,g[4],S41,4149444226);f=II(f,c,d,e,g[11],S42,3174756917);e=II(e,f,c,d,g[2],S43,718787259);d=II(d,e,f,c,g[9],S44,3951481745);state[0]+=c;state[1]+=d;state[2]+=e;state[3]+=f}function init(){count[0]=count[1]=0;state[0]=1732584193;state[1]=4023233417;state[2]=2562383102;state[3]=271733878;for(i=0;i<digestBits.length;i++)digestBits[i]=0}function update(a){var b,c;b=and(shr(count[0],3),63);if(count[0]<4294967295-7)count[0]+=8;else{count[1]++;count[0]-=4294967295+1;count[0]+=8}buffer[b]=and(a,255);if(b>=63){transform(buffer,0)}}function finish(){var a=new array(8);var b;var c=0,d=0,e=0;for(c=0;c<4;c++){a[c]=and(shr(count[0],c*8),255)}for(c=0;c<4;c++){a[c+4]=and(shr(count[1],c*8),255)}d=and(shr(count[0],3),63);e=d<56?56-d:120-d;b=new array(64);b[0]=128;for(c=0;c<e;c++)update(b[c]);for(c=0;c<8;c++)update(a[c]);for(c=0;c<4;c++){for(j=0;j<4;j++){digestBits[c*4+j]=and(shr(state[c],j*8),255)}}}function hexa(a){var b="0123456789abcdef";var c="";var d=a;for(hexa_i=0;hexa_i<8;hexa_i++){c=b.charAt(Math.abs(d)%16)+c;d=Math.floor(d/16)}return c}function MD5(a){var b,c,d,e,f,g,h;init();for(d=0;d<a.length;d++){b=a.charAt(d);update(ascii.lastIndexOf(b))}finish();e=f=g=h=0;for(i=0;i<4;i++)e+=shl(digestBits[15-i],i*8);for(i=4;i<8;i++)f+=shl(digestBits[15-i],(i-4)*8);for(i=8;i<12;i++)g+=shl(digestBits[15-i],(i-8)*8);for(i=12;i<16;i++)h+=shl(digestBits[15-i],(i-12)*8);c=hexa(h)+hexa(g)+hexa(f)+hexa(e);return c}var state=new array(4);var count=new array(2);count[0]=0;count[1]=0;var buffer=new array(64);var transformBuffer=new array(16);var digestBits=new array(16);var S11=7;var S12=12;var S13=17;var S14=22;var S21=5;var S22=9;var S23=14;var S24=20;var S31=4;var S32=11;var S33=16;var S34=23;var S41=6;var S42=10;var S43=15;var S44=21;var ascii="01234567890123456789012345678901"+" !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ"+"[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+	
+	 
+	 function onEncrypt() {
+	 	var txta = $("#encrypt_txtarea");
+	 	var initial_value = txta.val();
+	 	var encrypt_method = $(".encrypt_method button.active").text();
+	 	if (encrypt_method == "rot13") {
+	 		txta.val(rot13(initial_value));
+	 	} 
+	 	else if (encrypt_method == "md5") {
+	 		txta.val(MD5(initial_value));
+	 	}
+	 	txta.select();
+	 }	
+	 
+	 function refreshTimestamp(from) {
+	 
+	 	var inp = $('#ts_input');
+	 	var inp_day = $('#ts_day');
+	 	var inp_month = $('#ts_month');
+	 	var inp_year = $('#ts_year');
+	 	var inp_hour = $('#ts_hour');
+	 	var inp_minute = $('#ts_minute');
+	 	var inp_second = $('#ts_second');
+	 
+	 	if (from == 'input'){
+	 		var d = new Date(parseInt(inp.val()*1000,10));
+	 		inp_day.val(d.getDate());
+	 		inp_month.val(d.getMonth()+1);
+	 		inp_year.val(d.getFullYear());
+	 		inp_hour.val(d.getHours());
+	 		inp_minute.val(d.getMinutes());
+	 		inp_second.val(d.getSeconds());	 		
+	 	}
+	 	else {
+	 		var d = new Date(inp_year.val(),parseInt(inp_month.val(),10)-1,inp_day.val(),inp_hour.val(),inp_minute.val(),inp_second.val(),0);
+	 		inp.val(parseInt(d.getTime()/1000,10));
+	 	}
+	 }
+	 
+	 function resetTimestamp() {
+	 	var inp = $('#ts_input');
+	 	var current_ts = (new Date()).getTime();
+	 	current_ts = Math.round(current_ts/1000);
+	 	inp.val(current_ts);
+	 	refreshTimestamp('input');
+	 }
+ 
+	$(function() {
+	
+		// map href links
+		$.each($("div.navbar a"),function() {
+			if (/#/.test($(this).attr("href"))) {
+				$(this).click(function() {
+					setTimeout(function() {
+						$(".tabcont").addClass("hidden"); console.log(document.location.hash.replace("#",""));
+						$(document.location.hash).removeClass("hidden");
+						$("div.navbar li").removeClass("active");
+						$("div.navbar a[href=\""+document.location.hash+"\"]").parents("li").addClass("active");
+					},100);
+				});
+			}
+		});
+		
+		if (!document.location.hash) 	$("#XHR").removeClass("hidden");
+		else {
+			$(document.location.hash).removeClass("hidden");
+			$("div.navbar li").removeClass("active");
+			$("div.navbar a[href=\""+document.location.hash+"\"]").parents("li").addClass("active");
+		}
+			
+		if (localStorage) {
+			for(var k in xhr_fields){
+				if (localStorage[xhr_fields[k]]) $("#"+xhr_fields[k]).val(localStorage[xhr_fields[k]]);
+				$("#"+xhr_fields[k]).change(function(){
+					localStorage[$(this).attr("id")] = $(this).val();
+				});
+			}
+			if (localStorage["meth"]){ 	$("#"+localStorage["meth"]).attr("checked","checked"); 	}
+			
+			if (localStorage["restart_apache"]) $("#restart_apache .last_done span").text(localStorage["restart_apache"]);
+			if (localStorage["restart_socket"]) $("#restart_socket .last_done span").text(localStorage["restart_socket"]);
+		}
+	});
+
+</script>
 
 </body>
 </html>
